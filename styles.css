@@ -1,0 +1,147 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #1e1e1e;
+    color: #fff;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 30px;
+    font-size: 2.5em;
+    color: #ffffff;
+}
+
+.view-options {
+    margin-bottom: 20px;
+    color: #ffffff;
+    font-size: 1em;
+}
+
+.view-options label {
+    margin-right: 10px;
+}
+
+.view-options select {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    font-size: 1em;
+    border-radius: 5px;
+}
+
+.crypto-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.crypto {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #2a2a2a;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.crypto:hover {
+    transform: scale(1.03);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.crypto .info {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.crypto img {
+    width: 40px;
+    height: 40px;
+    margin-right: 15px;
+}
+
+.crypto h2 {
+    margin: 0;
+    font-size: 1.3em;
+    color: #fff;
+    font-weight: 600;
+}
+
+.crypto .price {
+    font-size: 1.2em;
+    color: #ff6f61;
+    font-weight: bold;
+    margin-left: auto;
+    margin-right: 20px;
+}
+
+.crypto .change {
+    display: flex;
+    align-items: center;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.change.green {
+    color: #28a745;
+}
+
+.change.red {
+    color: #dc3545;
+}
+
+.change::before {
+    content: '';
+    display: inline-block;
+    margin-right: 5px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+}
+
+.change.green::before {
+    border-width: 0 5px 8px 5px;
+    border-color: transparent transparent #28a745 transparent;
+}
+
+.change.red::before {
+    border-width: 8px 5px 0 5px;
+    border-color: #dc3545 transparent transparent transparent;
+}
+
+.chart-container {
+    position: relative;
+    width: 120px;
+    height: 40px;
+}
+
+@media (min-width: 768px) {
+    .crypto-container {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    .crypto {
+        width: 48%;
+    }
+}
