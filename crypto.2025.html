@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Pulse - Live Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #0f172a;
+            --card-bg: #1e293b;
+            --positive: #10b981;
+            --negative: #ef4444;
+            --accent: #3b82f6;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--primary-bg);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid #334155;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin: 0;
+            background: linear-gradient(45deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .timeframe-selector {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .timeframe-btn {
+            background: var(--card-bg);
+            border: none;
+            color: #94a3b8;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .timeframe-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .crypto-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .crypto-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            border: 1px solid #334155;
+        }
+
+        .crypto-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .crypto-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .crypto-icon {
+            width: 40px;
+            height: 40px;
+            margin-right: 1rem;
+            border-radius: 50%;
+        }
+
+        .crypto-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .crypto-symbol {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .price-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .price {
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .change-indicator {
+            font-size: 1.2rem;
+        }
+
+        .up {
+            color: var(--positive);
+        }
+
+        .down {
+            color: var(--negative);
+        }
+
+        .recommendation {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            text-align: center;
+            margin-top: 1rem;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .buy {
+            color: var(--positive);
+            border: 1px solid var(--positive);
+        }
+
+        .sell {
+            color: var(--negative);
+            border: 1px solid var(--negative);
+        }
+
+        .hold {
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+        }
+
+        @keyframes priceFlash {
+            0% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 0.5; transform: scale(1); }
+        }
+
+        .price-flash {
+            animation: priceFlash 0.5s ease-in-out;
+        }
+
+        .glow {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(59,130,246,0.2) 0%, rgba(0,0,0,0) 70%);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Crypto Pulse</h1>
+            <div class="timeframe-selector">
+                <button class="timeframe-btn active" data-timeframe="1h">1H</button>
+                <button class="timeframe-btn" data-timeframe="4h">4H</button>
+                <button class="timeframe-btn" data-timeframe="1D">1D</button>
+            </div>
+        </div>
+
+        <div class="crypto-grid" id="cryptoGrid"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false';
+        let selectedTimeframe = '1h';
+        
+        const cryptoData = [
+            { id: 'bitcoin', symbol: 'btc', name: 'Bitcoin', fullName: 'Bitcoin (BTC)' },
+            { id: 'ethereum', symbol: 'eth', name: 'Ethereum', fullName: 'Ethereum (ETH)' },
+            { id: 'binancecoin', symbol: 'bnb', name: 'BNB', fullName: 'BNB (BNB)' },
+            { id: 'ripple', symbol: 'xrp', name: 'XRP', fullName: 'Ripple (XRP)' },
+            { id: 'cardano', symbol: 'ada', name: 'Cardano', fullName: 'Cardano (ADA)' },
+            { id: 'solana', symbol: 'sol', name: 'Solana', fullName: 'Solana (SOL)' },
+            { id: 'dogecoin', symbol: 'doge', name: 'Dogecoin', fullName: 'Dogecoin (DOGE)' },
+            { id: 'polkadot', symbol: 'dot', name: 'Polkadot', fullName: 'Polkadot (DOT)' },
+            { id: 'litecoin', symbol: 'ltc', name: 'Litecoin', fullName: 'Litecoin (LTC)' },
+            { id: 'chainlink', symbol: 'link', name: 'Chainlink', fullName: 'Chainlink (LINK)' }
+        ];
+
+        // Mock recommendation engine
+        function getRecommendation(changePercentage) {
+            if (changePercentage > 3) return { action: 'BUY', confidence: 'High' };
+            if (changePercentage > 1) return { action: 'BUY', confidence: 'Medium' };
+            if (changePercentage < -3) return { action: 'SELL', confidence: 'High' };
+            if (changePercentage < -1) return { action: 'SELL', confidence: 'Medium' };
+            return { action: 'HOLD', confidence: 'Neutral' };
+        }
+
+        async function fetchPrices() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                updatePrices(data);
+            } catch (error) {
+                console.error('Error fetching prices:', error);
+            }
+        }
+
+        function updatePrices(data) {
+            const cryptoGrid = document.getElementById('cryptoGrid');
+            cryptoGrid.innerHTML = '';
+
+            data.forEach(crypto => {
+                const storedData = JSON.parse(localStorage.getItem(crypto.id) || '{}');
+                const previousPrice = storedData.price || crypto.current_price;
+                const priceChange = crypto.current_price - previousPrice;
+                const changePercentage = ((priceChange / previousPrice) * 100).toFixed(2);
+                
+                const recommendation = getRecommendation(changePercentage);
+
+                const card = document.createElement('div');
+                card.className = 'crypto-card';
+                
+                card.innerHTML = `
+                    <div class="glow"></div>
+                    <div class="crypto-header">
+                        <img src="https://cryptoicon-api.vercel.app/api/icon/${crypto.symbol}" class="crypto-icon">
+                        <div>
+                            <div class="crypto-name">${cryptoData.find(c => c.id === crypto.id)?.fullName}</div>
+                            <div class="crypto-symbol">Rank #${crypto.market_cap_rank}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="price-container">
+                        <div class="price ${priceChange >= 0 ? 'up' : 'down'}">
+                            <span class="change-indicator">${priceChange >= 0 ? '▲' : '▼'}</span>
+                            $${crypto.current_price.toLocaleString()}
+                        </div>
+                        <div class="${priceChange >= 0 ? 'up' : 'down'}">
+                            ${changePercentage}%
+                        </div>
+                    </div>
+
+                    <div class="recommendation ${recommendation.action.toLowerCase()}">
+                        ${recommendation.action} (${recommendation.confidence})
+                    </div>
+                `;
+
+                // Add flash animation
+                const priceElement = card.querySelector('.price');
+                priceElement.classList.add('price-flash');
+                setTimeout(() => priceElement.classList.remove('price-flash'), 500);
+
+                cryptoGrid.appendChild(card);
+                localStorage.setItem(crypto.id, JSON.stringify({ price: crypto.current_price }));
+            });
+        }
+
+        // Timeframe selection
+        document.querySelectorAll('.timeframe-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedTimeframe = btn.dataset.timeframe;
+                // Add timeframe-based data fetching logic here
+                fetchPrices();
+            });
+        });
+
+        // Initial load
+        fetchPrices();
+        setInterval(fetchPrices, 10000);
+    </script>
+</body>
+</html>
